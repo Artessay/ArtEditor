@@ -209,31 +209,17 @@ FiniteStateMachine()
                         state="LastLine"
                         ;;
                     [iI] | [aA] | [oO])    # 插入模式
-                        if [[ $op == [aA] ]]    # 追加则为将光标移动到末尾的插入
+                        if [[ $op == [aA] ]]    # 追加则为从光标后一个字符开始插入
                             then
                                 ((col = col + 1))
-                                # total_line=$(cat $efile | wc -l)    # 原文件总行数
-                                # echo >> $efile      # 追加一行新行
-                                # row=$((total_line + 1)) # 移动光标
-                                # col=1                   # 移动光标
                         fi
-                        if [[ $op == [oO] ]]
-                            then
-                                tmp=$(mktemp miniedit.XXXX)
-                                LineCount=0
-                                while read line
-                                do
-                                    (( LineCount = LineCount + 1 )) # 行号++
-                                    echo $line >> $tmp
-                                    if [[ $row == $LineCount ]]
-                                        then 
-                                            echo   # 插入空行
-                                            let row=row+1   # 行号加一
-                                            let col=1       # 列号归一
 
-                                    fi
-                                done < $efile   # 重定向
-                                mv $tmp $efile  # 消除临时文件并更新文件
+                        if [[ $op == [oO] ]]    # 打开则为将光标移动到末尾的插入
+                            then
+                                total_line=$(cat $efile | wc -l)    # 原文件总行数
+                                echo >> $efile      # 追加一行新行
+                                row=$((total_line + 1)) # 移动光标
+                                col=1                   # 移动光标
                         fi
 
                         state="Insert"
