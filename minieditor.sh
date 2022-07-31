@@ -202,7 +202,7 @@ FiniteStateMachine()
                 # echo "Command Mode"
 
                 stty -echo      # 关闭命令回显
-                read -n1 op     # 读入控制字符
+                read -s -n1 op  # 读入控制字符
 
                 case $op in
                     :)
@@ -268,7 +268,7 @@ FiniteStateMachine()
                             # 插入新行
                             ((col = col - 1))   # 在当前光标前插入字符
 
-                            if [[ $character -ne '\b' ]]    # 退格键特殊处理
+                            if [[ $character != '\b' ]]    # 退格键特殊处理
                                 then    # 如果输入的不是退格键
                                     new_line=${line:0:$col}$character${line:$col}   # 则正常输入
                                     ((col = col + 2))   # 插入字符后光标右移
@@ -276,7 +276,7 @@ FiniteStateMachine()
                                     new_line=${line:0:$((col-1))}{line:$col}        # 则删除前一个字符
                             fi
 
-                            if [[ $character -eq '\n' ]]    # 回车键特殊处理
+                            if [[ $character == '' ]]    # 回车键特殊处理
                                 then    # 行号和列号需要重定位
                                     ((row = row + 1))   # 行号加1
                                     ((col = 1))         # 列号为1
@@ -317,7 +317,7 @@ FiniteStateMachine()
                             col=$((col + 1))   # 插入字符后光标右移
                             echo $new_line >> $tmp  # 对于也要替换部分更新
                             
-                            if [[ $character -eq '\n' ]]    # 回车键特殊处理
+                            if [[ $character == '' ]]    # 回车键特殊处理
                                 then    # 行号和列号需要重定位
                                     ((row = row + 1))   # 行号加1
                                     ((col = 1))         # 列号为1
