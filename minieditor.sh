@@ -148,12 +148,6 @@ Render()
             return 1
     fi
 
-    # 清屏      但是清屏还是太慢了一点
-    if [[ $refresh == "true" ]]
-        then    # 仅当刷新时清屏
-            tput clear     # 清除屏幕
-    fi
-
     tput civis          # 暂时隐藏光标
 
     # 初始化变量
@@ -161,27 +155,29 @@ Render()
     let LineCount=1     # 行号统计，默认从1开始
     rows=$(tput lines)  # 当前屏幕行数
     cols=$(tput cols)   # 当前屏幕列数
-
-    # 底行打印提示信息
-    tput cup $((rows-1)) 0    # 定位屏幕最后一行
-    tput el
-    printf "== $state Mode ==\t      row: $row  col: $col        $ErrorMessage"
-    ErrorMessage=""
-
+    
     # 循环显示文本
     tput cup 0 0        # 定位屏幕顶行
     if [[ $refresh == "true" ]]
         then            # 只有插入模式下发生修改了才需要刷新文本
+            tput clear          # 清除屏幕
+            cat $render_file    # 显示新文本
+
             # cat $render_file | while read line
             # do
             #     echo $line  # 为了提升打印的速度，暂时取消行号显示功能
             #     # printf "\033[35mLine%3d\033[0m: $line\n" $LineCount
             #     # (( LineCount = LineCount + 1 ))
             # done
-            cat $render_file
 
             refresh="false" # 恢复刷新标记
     fi
+
+    # 底行打印提示信息
+    tput cup $((rows-1)) 0    # 定位屏幕最后一行
+    tput el
+    printf "== $state Mode ==\t      row: $row  col: $col        $ErrorMessage"
+    ErrorMessage=""
 
     tput cup $((row-1)) $((col-1))        # 重新将光标移到原来的位置
     tput cnorm                            # 重新显示光标
@@ -279,10 +275,11 @@ FiniteStateMachine()
                         else
                             # 插入新行
                             ((col = col - 1))   # 在当前光标前插入字符
+                            ((col = col > 0 ? col : 1)) # 不允许非法越界
 
-                            if [[ $(printf "%d" \'$op) == 127 ]]    # 退格键特殊处理
+                            if [[ $(printf "%d" \'$character) == 127 ]]    # 退格键特殊处理
                                 then    # 如果输入的是退格键
-                                    new_line=${line:0:$((col-1))}{line:$col}        # 则删除前一个字符
+                                    new_line=${line:0:$((col-1))}${line:$col}        # 则删除前一个字符
                                 else    # 如果输入的不是退格键
 
                                     if [[ $character == '' ]]    # 回车键特殊处理
