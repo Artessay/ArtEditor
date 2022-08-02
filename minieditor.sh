@@ -149,7 +149,11 @@ Render()
     fi
 
     # 清屏      但是清屏还是太慢了一点
-    # tput clear     # 清除屏幕
+    if [[ $refresh == "true" ]]
+        then    # 仅当刷新时清屏
+            tput clear     # 清除屏幕
+    fi
+
     tput civis          # 暂时隐藏光标
 
     # 初始化变量
@@ -191,6 +195,9 @@ FiniteStateMachine()
     tput smcup          # 进入备用屏幕
     echo -e '\E7'       # 保存当前光标的位置
     echo -e '\033[?47h' # 切换到备用屏幕
+
+    # 定义Internal Field Separator，区别回车，空格与制表符
+    IFS=
 
     # 无限循环
     while :
@@ -273,20 +280,26 @@ FiniteStateMachine()
                             # 插入新行
                             ((col = col - 1))   # 在当前光标前插入字符
 
-                            if [[ $character != '\b' ]]    # 退格键特殊处理
-                                then    # 如果输入的不是退格键
-                                    new_line=${line:0:$col}$character${line:$col}   # 则正常输入
-                                    ((col = col + 2))   # 插入字符后光标右移
-                                else    # 如果输入的是退格键
+                            if [[ $(printf "%d" \'$op) == 127 ]]    # 退格键特殊处理
+                                then    # 如果输入的是退格键
                                     new_line=${line:0:$((col-1))}{line:$col}        # 则删除前一个字符
-                            fi
+                                else    # 如果输入的不是退格键
 
-                            if [[ $character == '' ]]    # 回车键特殊处理
-                                then    # 行号和列号需要重定位
-                                    ((row = row + 1))   # 行号加1
-                                    ((col = 1))         # 列号为1
+                                    if [[ $character == '' ]]    # 回车键特殊处理
+                                        then    # 行号和列号需要重定位
+                                            new_line=${line:0:$col} # 记录光标前的内容
+                                            echo $new_line >> $tmp  # 输出
+                                            new_line=${line:$col}   # 光标后的内容另起一行
+                                            # ((row = row + 1))   # 行号加1
+                                            # ((col = 1))         # 列号为1
+                                        else
+
+                                            new_line=${line:0:$col}$character${line:$col}   # 则正常输入
+                                            ((col = col + 2))   # 插入字符后光标右移
+                                    fi
+                                    
                             fi
-                            
+                                                        
                             echo $new_line >> $tmp
                     fi
                 done < $efile   # 重定向
